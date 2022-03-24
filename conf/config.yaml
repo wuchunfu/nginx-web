@@ -1,0 +1,48 @@
+# system configuration
+system:
+  # service listening address
+  port: 9090
+  # file storage path
+  storagePath: /tmp/nginx-web
+
+# mysql
+database:
+  # 数据库引擎, 目前只支持 mysql
+  dbType: mysql
+  # 数据库主机名
+  host: 10.1.2.108
+  # 数据库端口
+  port: 3306
+  # 数据库名
+  dbName: test
+  # 数据库用户名
+  username: root
+  # 数据库密码
+  password: "ABCabc@123"
+  # 表前缀
+  prefix: sys_
+  # 数据库字符集
+  charset: utf8mb4
+  maxIdleConns: 5
+  maxOpenConns: 100
+  # Either "silent", "info", "warn", "error", default is "silent"
+  level: silent
+  # For "postgres" only, either "disable", "require" or "verify-full", default is "disable"
+  sslMode: disable
+  # For "postgres" only, either "Asia/Shanghai", default is "Asia/Shanghai"
+  timeZone: Asia/Shanghai
+
+# logger configuration
+log:
+  appName: app
+  development: true
+  # Either "error", "warn", "info", "debug", default is "info"
+  level: debug
+  logFileDir: ./logs
+  infoFileName: info.log
+  warnFileName: warn.log
+  errorFileName: error.log
+  debugFileName: debug.log
+  maxAge: 100
+  maxBackups: 60
+  maxSize: 30
