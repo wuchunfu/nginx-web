@@ -3,7 +3,7 @@ system:
   # service listening address
   port: 9090
   # file storage path
-  storagePath: /tmp/nginx-web
+  storagePath: /
 
 # mysql
 database:

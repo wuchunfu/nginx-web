@@ -3,6 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/wuchunfu/nginx-web/api"
+	"github.com/wuchunfu/nginx-web/api/configApi"
 	"github.com/wuchunfu/nginx-web/api/loginApi"
 	"github.com/wuchunfu/nginx-web/api/loginLogApi"
 	"github.com/wuchunfu/nginx-web/api/userApi"
@@ -43,6 +44,12 @@ func InitRouter() *gin.Engine {
 		userGroup.POST("/changePassword", userApi.ChangePassword)
 		userGroup.POST("/changeLoginPassword", userApi.ChangeLoginPassword)
 		userGroup.POST("/delete", userApi.Delete)
+	}
+
+	configGroup := router.Group("/sys/config")
+	{
+		configGroup.GET("/list", configApi.List)
+		configGroup.GET("/changeFolder", configApi.ChangeFolder)
 	}
 
 	router.NoRoute(api.NoRouteHandler)
