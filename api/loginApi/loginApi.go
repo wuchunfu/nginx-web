@@ -21,6 +21,7 @@ type LoginForm struct {
 func Login(ctx *gin.Context) {
 	form := new(LoginForm)
 	ctx.Bind(form)
+
 	username := strings.TrimSpace(form.Username)
 	password := strings.TrimSpace(form.Password)
 
@@ -28,47 +29,49 @@ func Login(ctx *gin.Context) {
 	usernameCount := user.IsExistsUsername(username)
 	if usernameCount <= 0 {
 		ctx.JSON(http.StatusOK, gin.H{
-			"code": http.StatusBadRequest,
+			"code": http.StatusInternalServerError,
 			"data": nil,
 			"msg":  "用户名不存在！",
 		})
-	} else {
-		info := user.GetInfoByName(username)
-		pwd := utils.Md5(password + user.Salt)
-		if info.Password != pwd {
-			ctx.JSON(http.StatusOK, gin.H{
-				"code": http.StatusBadRequest,
-				"data": nil,
-				"msg":  "用户名或密码不正确！",
-			})
-		} else {
-			loginLog := new(loginLogModel.LoginLog)
-			loginLog.Username = user.Username
-			loginLog.Ip = ctx.ClientIP()
-			loginLog.CreateTime = datetimex.FormatNowDateTime()
-			loginLog.Save()
-
-			tokenInfo, genErr := jwtx.GenerateToken(user.UserId, user.Username)
-			if genErr != nil {
-				ctx.JSON(http.StatusOK, gin.H{
-					"code": http.StatusUnauthorized,
-					"data": nil,
-					"msg":  "Token 生成失败！",
-				})
-				ctx.Abort()
-			}
-
-			// 保存 token
-			tokens := new(tokenModel.UserToken)
-			tokens.Save(user.UserId, tokenInfo)
-
-			ctx.JSON(http.StatusOK, gin.H{
-				"code": http.StatusOK,
-				"data": tokenInfo,
-				"msg":  "Token 获取成功！",
-			})
-		}
+		return
 	}
+
+	info := user.GetInfoByName(username)
+	pwd := utils.Md5(password + user.Salt)
+	if info.Password != pwd {
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusInternalServerError,
+			"data": nil,
+			"msg":  "用户名或密码不正确！",
+		})
+		return
+	}
+
+	tokenInfo, genErr := jwtx.GenerateToken(user.UserId, user.Username)
+	if genErr != nil {
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusUnauthorized,
+			"data": nil,
+			"msg":  "Token 生成失败！",
+		})
+		return
+	}
+
+	// 保存 token
+	tokens := new(tokenModel.UserToken)
+	tokens.Save(user.UserId, tokenInfo)
+
+	loginLog := new(loginLogModel.LoginLog)
+	loginLog.Username = user.Username
+	loginLog.Ip = ctx.ClientIP()
+	loginLog.CreateTime = datetimex.FormatNowDateTime()
+	loginLog.Save()
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"data": tokenInfo,
+		"msg":  "Token 获取成功！",
+	})
 }
 
 func Logout(ctx *gin.Context) {
@@ -79,7 +82,7 @@ func Logout(ctx *gin.Context) {
 			"data": nil,
 			"msg":  "权限不足！",
 		})
-		ctx.Abort()
+		return
 	}
 
 	parseToken, err := jwtx.ParseToken(token)
@@ -89,12 +92,11 @@ func Logout(ctx *gin.Context) {
 			"data": nil,
 			"msg":  "权限不足！",
 		})
-		ctx.Abort()
+		return
 	}
 
 	userId := parseToken.UserId
 	username := parseToken.Username
-
 	// 重新生成 token
 	tokenInfo, genErr := jwtx.GenerateToken(userId, username)
 	if genErr != nil {
@@ -103,7 +105,7 @@ func Logout(ctx *gin.Context) {
 			"data": nil,
 			"msg":  "Token 生成失败！",
 		})
-		ctx.Abort()
+		return
 	}
 
 	tokens := new(tokenModel.UserToken)

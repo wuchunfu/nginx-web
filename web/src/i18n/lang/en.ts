@@ -75,6 +75,7 @@ export default {
     layoutIfameView: 'IfameView',
     config: 'config',
     configFile: 'Config file',
+    configFileEditor: 'File Editor',
   },
   staticRoutes: {
     signIn: 'signIn',

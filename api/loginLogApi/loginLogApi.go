@@ -8,9 +8,10 @@ import (
 )
 
 func List(ctx *gin.Context) {
-	page, pageSize := common.ParseQueryParams(ctx)
 	username := ctx.Query("username")
+
 	loginLog := new(loginLogModel.LoginLog)
+	page, pageSize := common.ParseQueryParams(ctx)
 	dataList, count := loginLog.List(page, pageSize, username)
 	ctx.JSON(http.StatusOK, gin.H{
 		"code":     http.StatusOK,

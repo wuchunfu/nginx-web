@@ -17,7 +17,7 @@
         </el-col>
         <el-col :span="1.5">
           <el-button
-            type="primary"
+            type="warning"
             size="small"
             :disabled="tableData.folderDisabled"
             @click="handleChangeFolder('previous')"
@@ -26,6 +26,19 @@
               <ele-Back/>
             </el-icon>
             上一级
+          </el-button>
+        </el-col>
+        <el-col :span="1.5">
+          <el-button
+            type="success"
+            size="small"
+            :disabled="tableData.single"
+            @click="handleUpdate"
+          >
+            <el-icon>
+              <ele-Edit/>
+            </el-icon>
+            修改
           </el-button>
         </el-col>
       </el-row>
@@ -44,8 +57,14 @@
           highlight-current-row
           element-loading-text="Loading"
           @cell-click="handleListFolder"
+          @selection-change="handleSelectionChange"
           style="width: 100%"
         >
+          <el-table-column
+            type="selection"
+            align="center"
+            width="55"
+          />
           <el-table-column
             type="index"
             label="序号"
@@ -113,22 +132,26 @@
         </el-table>
       </el-skeleton>
     </el-card>
-    <AddOrUpdate ref="addOrUpdateUserRef" @onRefreshDataList="getDataList"/>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, onMounted, reactive, ref, toRefs } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus';
-import AddOrUpdate from '/@/views/system/user/component/AddOrUpdate.vue';
 import { getList, getListFolder } from "/@/api/config";
 import { useI18n } from "vue-i18n";
+import { useRouter } from "vue-router";
 
 // 定义接口来定义对象的类型
 interface TableDataRow {
-  userId: number;
+  basePath: string;
+  parentPath: string;
+  filePath: string;
   fileName: string;
+  isFile: boolean;
+  fileType: string;
   fileSize: string;
+  suffixName: string;
   dateTime: string;
 }
 
@@ -141,7 +164,7 @@ interface TableDataState {
     // 总条数
     total: number;
     // 选中数组
-    ids: any,
+    fileNames: any,
     // 非单个禁用
     single: boolean,
     // 非多个禁用
@@ -155,11 +178,10 @@ interface TableDataState {
 
 export default defineComponent({
   name: 'userList',
-  components: { AddOrUpdate },
   setup() {
     const { t } = useI18n();
+    const router = useRouter();
 
-    const addOrUpdateUserRef = ref();
     const queryFormRef = ref();
 
     const state = reactive<TableDataState>({
@@ -167,7 +189,7 @@ export default defineComponent({
         tableLoading: false,
         tableList: [],
         total: 0,
-        ids: [],
+        fileNames: [],
         single: true,
         multiple: true,
         showSearch: true,
@@ -218,8 +240,12 @@ export default defineComponent({
 
     const handleListFolder = (row: any, column: any, cell: any, event: any) => {
       if (!row.isFile) {
+        if (row.filePath === "") {
+          state.tableData.fileParentPath = row.fileName;
+        } else {
+          state.tableData.fileParentPath = row.filePath;
+        }
         state.tableData.folderDisabled = false;
-        state.tableData.fileParentPath = row.filePath;
         getDataList();
       }
     };
@@ -235,13 +261,10 @@ export default defineComponent({
         }
         getListFolder(params).then((res: any) => {
           console.log("getListFolder: ", res);
-          console.log("getListFolder: ", res.data[0]);
-          // let data = JSON.parse(JSON.stringify(res.data[0]));
           let data = res.data[0];
-          if (data.parentPath === data.basePath) {
+          if (data.parentPath === "") {
             state.tableData.folderDisabled = true
           }
-          // state.tableData.folderDisabled = true
           state.tableData.fileParentPath = data.parentPath
           state.tableData.tableList = res.data;
         }).catch((res: any) => {
@@ -254,16 +277,38 @@ export default defineComponent({
       }
     };
 
+    // 多选框选中数据
+    const handleSelectionChange = (selection: any) => {
+      state.tableData.fileNames = selection.map((item: any) => item.fileName)
+      state.tableData.single = selection.length != 1
+      state.tableData.multiple = !selection.length
+    };
+
     // 打开修改用户弹窗
     const handleUpdate = (row: TableDataRow) => {
-      const rowId = state.tableData.ids.length !== 0 ? state.tableData.ids : row.userId;
-      addOrUpdateUserRef.value.openUpdateDialog(rowId);
+      let fileName = "";
+      if (state.tableData.fileNames.length !== 0) {
+        fileName = state.tableData.fileNames;
+      } else {
+        if (row.filePath === "") {
+          fileName = row.fileName;
+        } else {
+          fileName = row.filePath;
+        }
+      }
+
+      router.push({
+        name: "configFileEditor",
+        query: {
+          fileName: fileName
+        }
+      })
     };
 
     return {
       ...toRefs(state),
-      addOrUpdateUserRef,
       queryFormRef,
+      handleSelectionChange,
       handleUpdate,
       getDataList,
       handleListFolder,

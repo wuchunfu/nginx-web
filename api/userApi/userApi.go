@@ -1,7 +1,6 @@
 package userApi
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/wuchunfu/nginx-web/common"
 	"github.com/wuchunfu/nginx-web/model/userModel"
@@ -28,9 +27,10 @@ type UserForm struct {
 
 // List 用户列表页
 func List(ctx *gin.Context) {
-	page, pageSize := common.ParseQueryParams(ctx)
 	username := ctx.Query("username")
+
 	user := new(userModel.User)
+	page, pageSize := common.ParseQueryParams(ctx)
 	dataList, count := user.List(page, pageSize, username)
 	ctx.JSON(http.StatusOK, gin.H{
 		"code":     http.StatusOK,
@@ -45,26 +45,29 @@ func List(ctx *gin.Context) {
 // Detail 用户详情
 func Detail(ctx *gin.Context) {
 	userId, _ := strconv.ParseInt(ctx.Param("userId"), 10, 64)
+
 	user := new(userModel.User)
 	detail := user.Detail(userId)
-	if detail.UserId >= 0 {
+	if detail.UserId <= 0 {
 		ctx.JSON(http.StatusOK, gin.H{
-			"code": http.StatusOK,
-			"data": &detail,
-			"msg":  "获取数据成功！",
-		})
-	} else {
-		ctx.JSON(http.StatusOK, gin.H{
-			"code": http.StatusBadRequest,
+			"code": http.StatusInternalServerError,
 			"data": &detail,
 			"msg":  "获取数据失败！",
 		})
+		return
 	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"data": &detail,
+		"msg":  "获取数据成功！",
+	})
 }
 
 func Save(ctx *gin.Context) {
 	form := new(UserForm)
 	ctx.Bind(form)
+
 	username := strings.TrimSpace(form.Username)
 	password := strings.TrimSpace(form.Password)
 	email := strings.TrimSpace(form.Email)
@@ -76,39 +79,43 @@ func Save(ctx *gin.Context) {
 	emailCount := user.IsExistsEmail(email)
 	if usernameCount > 0 {
 		ctx.JSON(http.StatusOK, gin.H{
-			"code": http.StatusBadRequest,
+			"code": http.StatusInternalServerError,
 			"data": nil,
 			"msg":  "用户名已存在！",
 		})
-	} else if emailCount > 0 {
+		return
+	}
+
+	if emailCount > 0 {
 		ctx.JSON(http.StatusOK, gin.H{
-			"code": http.StatusBadRequest,
+			"code": http.StatusInternalServerError,
 			"data": nil,
 			"msg":  "邮箱已存在！",
 		})
-	} else {
-		user.Username = username
-		user.Salt = utils.RandomString(6)
-		user.Password = utils.Md5(password + user.Salt)
-		user.Email = email
-		user.IsAdmin = isAdmin
-		user.Status = status
-		user.CreateTime = datetimex.FormatNowDateTime()
-		user.UpdateTime = datetimex.FormatNowDateTime()
-
-		user.Save()
-
-		ctx.JSON(http.StatusOK, gin.H{
-			"code": http.StatusOK,
-			"data": nil,
-			"msg":  "保存成功！",
-		})
+		return
 	}
+
+	user.Username = username
+	user.Salt = utils.RandomString(6)
+	user.Password = utils.Md5(password + user.Salt)
+	user.Email = email
+	user.IsAdmin = isAdmin
+	user.Status = status
+	user.CreateTime = datetimex.FormatNowDateTime()
+	user.UpdateTime = datetimex.FormatNowDateTime()
+	user.Save()
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"data": nil,
+		"msg":  "保存成功！",
+	})
 }
 
 func Update(ctx *gin.Context) {
 	form := new(UserForm)
 	ctx.Bind(form)
+
 	userId := form.UserId
 	username := strings.TrimSpace(form.Username)
 	email := strings.TrimSpace(form.Email)
@@ -134,37 +141,38 @@ func Update(ctx *gin.Context) {
 func ChangePassword(ctx *gin.Context) {
 	form := new(UserForm)
 	ctx.Bind(form)
+
 	userId := form.UserId
 	username := strings.TrimSpace(form.Username)
 	password := strings.TrimSpace(form.Password)
 
 	if password == "" {
 		ctx.JSON(http.StatusOK, gin.H{
-			"code": http.StatusBadRequest,
+			"code": http.StatusInternalServerError,
 			"data": nil,
 			"msg":  "请输入密码！",
 		})
-	} else {
-		//salt := utils.RandomString(6)
-		user := new(userModel.User)
-		userMap := make(map[string]interface{})
-		userMap["username"] = username
-		userMap["password"] = utils.Md5(password + user.Salt)
-		userMap["update_time"] = datetimex.FormatNowDateTime()
-
-		user.ChangePassword(userId, userMap)
-
-		ctx.JSON(http.StatusOK, gin.H{
-			"code": http.StatusOK,
-			"data": nil,
-			"msg":  "密码修改成功！",
-		})
+		return
 	}
+
+	user := new(userModel.User)
+	userMap := make(map[string]interface{})
+	userMap["username"] = username
+	userMap["password"] = utils.Md5(password + user.Salt)
+	userMap["update_time"] = datetimex.FormatNowDateTime()
+	user.ChangePassword(userId, userMap)
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"data": nil,
+		"msg":  "密码修改成功！",
+	})
 }
 
 func ChangeLoginPassword(ctx *gin.Context) {
 	form := new(UserForm)
 	ctx.Bind(form)
+
 	userId := form.UserId
 	username := strings.TrimSpace(form.Username)
 	oldPassword := strings.TrimSpace(form.Password)
@@ -175,38 +183,38 @@ func ChangeLoginPassword(ctx *gin.Context) {
 	password := utils.Md5(oldPassword + user.Salt)
 	if detail.Password != password {
 		ctx.JSON(http.StatusOK, gin.H{
-			"code": http.StatusBadRequest,
+			"code": http.StatusInternalServerError,
 			"data": nil,
 			"msg":  "原密码不正确！",
 		})
-	} else if oldPassword == "" || newPassword == "" {
+		return
+	}
+
+	if oldPassword == "" || newPassword == "" {
 		ctx.JSON(http.StatusOK, gin.H{
-			"code": http.StatusBadRequest,
+			"code": http.StatusInternalServerError,
 			"data": nil,
 			"msg":  "请输入密码！",
 		})
-	} else {
-		userMap := make(map[string]interface{})
-		userMap["username"] = username
-		userMap["password"] = utils.Md5(newPassword + user.Salt)
-		userMap["update_time"] = datetimex.FormatNowDateTime()
-
-		user.ChangePassword(userId, userMap)
-
-		ctx.JSON(http.StatusOK, gin.H{
-			"code": http.StatusOK,
-			"data": nil,
-			"msg":  "密码修改成功！",
-		})
+		return
 	}
+
+	userMap := make(map[string]interface{})
+	userMap["username"] = username
+	userMap["password"] = utils.Md5(newPassword + user.Salt)
+	userMap["update_time"] = datetimex.FormatNowDateTime()
+	user.ChangePassword(userId, userMap)
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"data": nil,
+		"msg":  "密码修改成功！",
+	})
 }
 
 func Delete(ctx *gin.Context) {
 	form := new(UserForm)
 	ctx.Bind(form)
-
-	fmt.Println("=-=-=-=")
-	fmt.Println(form.UserIds)
 
 	user := new(userModel.User)
 	for _, id := range form.UserIds {

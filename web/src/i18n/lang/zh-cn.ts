@@ -75,6 +75,7 @@ export default {
     layoutIfameView: '内嵌 iframe',
     config: '配置',
     configFile: '配置文件',
+    configFileEditor: '文件编辑',
   },
   staticRoutes: {
     signIn: '登录',

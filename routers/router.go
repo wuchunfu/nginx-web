@@ -49,6 +49,7 @@ func InitRouter() *gin.Engine {
 	configGroup := router.Group("/sys/config")
 	{
 		configGroup.GET("/list", configApi.List)
+		configGroup.GET("/detail", configApi.Detail)
 		configGroup.GET("/changeFolder", configApi.ChangeFolder)
 	}
 
