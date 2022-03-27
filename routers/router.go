@@ -50,6 +50,7 @@ func InitRouter() *gin.Engine {
 	{
 		configGroup.GET("/list", configApi.List)
 		configGroup.GET("/detail", configApi.Detail)
+		configGroup.PUT("/update", configApi.Update)
 		configGroup.GET("/changeFolder", configApi.ChangeFolder)
 	}
 

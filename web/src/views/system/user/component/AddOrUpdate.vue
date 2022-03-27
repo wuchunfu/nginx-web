@@ -232,6 +232,15 @@ export default defineComponent({
           state.formData.isShowDialog = true;
           state.formData.title = "修改";
         }
+      }).catch((res) => {
+        console.log(res)
+        ElNotification({
+          type: 'error',
+          showClose: true,
+          duration: 3000,
+          title: "详情",
+          message: "获取详情失败"
+        });
       });
     };
 

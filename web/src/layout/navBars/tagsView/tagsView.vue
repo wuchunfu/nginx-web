@@ -13,7 +13,9 @@
           @click="onTagsClick(v, k)"
           :ref="
 						(el) => {
-							if (el) tagsRefs[k] = el;
+							if (el) {
+                tagsRefs[k] = el;
+							}
 						}
 					"
         >
@@ -264,12 +266,18 @@ export default defineComponent({
                 // 最后一个且高亮时
                 if (arr[arr.length - 1].meta.isDynamic) {
                   // 动态路由（xxx/:id/:name"）
-                  if (k !== arr.length) router.push({ name: arr[k].name, params: arr[k].params });
-                  else router.push({ name: arr[arr.length - 1].name, params: arr[arr.length - 1].params });
+                  if (k !== arr.length) {
+                    router.push({ name: arr[k].name, params: arr[k].params });
+                  } else {
+                    router.push({ name: arr[arr.length - 1].name, params: arr[arr.length - 1].params });
+                  }
                 } else {
                   // 普通路由
-                  if (k !== arr.length) router.push({ path: arr[k].path, query: arr[k].query });
-                  else router.push({ path: arr[arr.length - 1].path, query: arr[arr.length - 1].query });
+                  if (k !== arr.length) {
+                    router.push({ path: arr[k].path, query: arr[k].query });
+                  } else {
+                    router.push({ path: arr[arr.length - 1].path, query: arr[arr.length - 1].query });
+                  }
                 }
               } else {
                 // 非最后一个且高亮时，跳转到下一个

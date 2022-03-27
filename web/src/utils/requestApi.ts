@@ -15,11 +15,11 @@ export const getRequestById = (url: string) => {
   })
 }
 
-export const postRequest = (url: string, params: object) => {
+export const postRequest = (url: string, data: object) => {
   return request({
     method: 'post',
     url: url,
-    data: params
+    data: data
   })
 }
 
@@ -30,11 +30,11 @@ export const postRequestById = (url: string) => {
   })
 }
 
-export const putRequest = (url: string, params: object) => {
+export const putRequest = (url: string, data: object) => {
   return request({
     method: 'put',
     url: url,
-    data: params
+    data: data
   })
 }
 
@@ -45,11 +45,11 @@ export const deleteRequestById = (url: string) => {
   })
 }
 
-export const uploadFileRequest = (url: string, params: object) => {
+export const uploadFileRequest = (url: string, data: object) => {
   return request({
     method: 'post',
     url: url,
-    data: params,
+    data: data,
     headers: {
       'Content-Type': 'multipart/form-data'
     }

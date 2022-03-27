@@ -29,15 +29,35 @@ type FileList struct {
 	DateTime   string `json:"dateTime"`   // 文件修改时间
 }
 
+type ConfigForm struct {
+	ParentPath string `json:"parentPath" binding:"required"` // 文件路径
+	Content    string `json:"content" binding:"required"`    // 文件内容
+}
+
 func List(ctx *gin.Context) {
 	setting := configx.ServerSetting
 	storagePath := setting.System.StoragePath
-	confPath := nginxx.GetConfPath(storagePath)
+	confPath, pathErr := nginxx.GetConfPath(storagePath)
+	if pathErr != nil {
+		logx.GetLogger().Sugar().Errorf("Get nginx conf path failed: %s", pathErr.Error())
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "Get nginx conf path failed!",
+			"data": nil,
+		})
+		return
+	}
 	baseAbsPath, _ := filepath.Abs(confPath)
 
 	isExistPath := filex.FilePathExists(baseAbsPath)
 	if !isExistPath {
-		filex.MkdirAll(baseAbsPath)
+		logx.GetLogger().Sugar().Errorf("File or directory does not exist!: %s", baseAbsPath)
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "File or directory does not exist!",
+			"data": nil,
+		})
+		return
 	}
 
 	parentPath := ctx.Query("parentPath")
@@ -47,6 +67,7 @@ func List(ctx *gin.Context) {
 	if parentPath == "" {
 		isDir := filex.IsDir(baseAbsPath)
 		if !isDir {
+			logx.GetLogger().Sugar().Errorf("File or directory does not exist!: %s", baseAbsPath)
 			ctx.JSON(http.StatusOK, gin.H{
 				"code": http.StatusInternalServerError,
 				"msg":  "File or directory does not exist!",
@@ -61,6 +82,7 @@ func List(ctx *gin.Context) {
 
 		isDir := filex.IsDir(parentAbsPath)
 		if !isDir {
+			logx.GetLogger().Sugar().Errorf("File or directory does not exist!: %s", parentAbsPath)
 			ctx.JSON(http.StatusOK, gin.H{
 				"code": http.StatusInternalServerError,
 				"msg":  "File or directory does not exist!",
@@ -82,8 +104,28 @@ func List(ctx *gin.Context) {
 func Detail(ctx *gin.Context) {
 	setting := configx.ServerSetting
 	storagePath := setting.System.StoragePath
-	confPath := nginxx.GetConfPath(storagePath)
+	confPath, pathErr := nginxx.GetConfPath(storagePath)
+	if pathErr != nil {
+		logx.GetLogger().Sugar().Errorf("Get nginx conf path failed: %s", pathErr.Error())
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "Get nginx conf path failed!",
+			"data": nil,
+		})
+		return
+	}
 	baseAbsPath, _ := filepath.Abs(confPath)
+
+	isExistPath := filex.FilePathExists(baseAbsPath)
+	if !isExistPath {
+		logx.GetLogger().Sugar().Errorf("File or directory does not exist!: %s", baseAbsPath)
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "File or directory does not exist!",
+			"data": nil,
+		})
+		return
+	}
 
 	parentPath := ctx.Query("parentPath")
 	logx.GetLogger().Sugar().Infof("parentPath: %s", parentPath)
@@ -94,6 +136,7 @@ func Detail(ctx *gin.Context) {
 
 		exists := filex.FilePathExists(parentAbsPath)
 		if !exists {
+			logx.GetLogger().Sugar().Errorf("File or directory does not exist!: %s", parentAbsPath)
 			ctx.JSON(http.StatusOK, gin.H{
 				"code": http.StatusInternalServerError,
 				"msg":  "File or directory does not exist!",
@@ -104,6 +147,7 @@ func Detail(ctx *gin.Context) {
 
 		isFile := filex.IsFile(parentAbsPath)
 		if !isFile {
+			logx.GetLogger().Sugar().Errorf("File or directory does not exist!: %s", parentAbsPath)
 			ctx.JSON(http.StatusOK, gin.H{
 				"code": http.StatusInternalServerError,
 				"msg":  "File or directory does not exist!",
@@ -112,12 +156,12 @@ func Detail(ctx *gin.Context) {
 			return
 		}
 
-		fileByte, err := os.ReadFile(parentAbsPath)
+		originalContent, err := os.ReadFile(parentAbsPath)
 		if err != nil {
-			logx.GetLogger().Sugar().Errorf("Read File Error: %s", err.Error())
+			logx.GetLogger().Sugar().Errorf("Read file failed: %s", err.Error())
 			ctx.JSON(http.StatusOK, gin.H{
 				"code": http.StatusInternalServerError,
-				"msg":  "File or directory does not exist!",
+				"msg":  "Read file failed!",
 				"data": nil,
 			})
 			return
@@ -126,7 +170,122 @@ func Detail(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
 			"code": http.StatusOK,
 			"msg":  "Get data successfully!",
-			"data": string(fileByte),
+			"data": string(originalContent),
+		})
+	}
+}
+
+// Update 文件详情
+func Update(ctx *gin.Context) {
+	setting := configx.ServerSetting
+	storagePath := setting.System.StoragePath
+	confPath, pathErr := nginxx.GetConfPath(storagePath)
+	if pathErr != nil {
+		logx.GetLogger().Sugar().Errorf("Get nginx conf path failed: %s", pathErr.Error())
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "Get nginx conf path failed!",
+			"data": nil,
+		})
+		return
+	}
+	baseAbsPath, _ := filepath.Abs(confPath)
+
+	isExistPath := filex.FilePathExists(baseAbsPath)
+	if !isExistPath {
+		logx.GetLogger().Sugar().Errorf("File or directory does not exist!: %s", baseAbsPath)
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "File or directory does not exist!",
+			"data": nil,
+		})
+		return
+	}
+
+	form := new(ConfigForm)
+	ctx.Bind(form)
+
+	parentPath := form.ParentPath
+	content := form.Content
+
+	logx.GetLogger().Sugar().Infof("parentPath: %s", parentPath)
+
+	if parentPath != "" {
+		parentAbsPath := filepath.Join(baseAbsPath, parentPath)
+		logx.GetLogger().Sugar().Infof("parentAbsPath: %s", parentAbsPath)
+
+		exists := filex.FilePathExists(parentAbsPath)
+		if !exists {
+			logx.GetLogger().Sugar().Errorf("File or directory does not exist!: %s", parentAbsPath)
+			ctx.JSON(http.StatusOK, gin.H{
+				"code": http.StatusInternalServerError,
+				"msg":  "File or directory does not exist!",
+				"data": nil,
+			})
+			return
+		}
+
+		isFile := filex.IsFile(parentAbsPath)
+		if !isFile {
+			logx.GetLogger().Sugar().Errorf("File or directory does not exist!: %s", parentAbsPath)
+			ctx.JSON(http.StatusOK, gin.H{
+				"code": http.StatusInternalServerError,
+				"msg":  "File or directory does not exist!",
+				"data": nil,
+			})
+			return
+		}
+
+		originalContent, err := os.ReadFile(parentAbsPath)
+		if err != nil {
+			logx.GetLogger().Sugar().Errorf("Read file failed: %s", err.Error())
+			ctx.JSON(http.StatusOK, gin.H{
+				"code": http.StatusInternalServerError,
+				"msg":  "Read file failed!",
+				"data": nil,
+			})
+			return
+		}
+
+		if content != "" && content != string(originalContent) {
+			err := os.WriteFile(parentAbsPath, []byte(content), 0644)
+			if err != nil {
+				logx.GetLogger().Sugar().Errorf("Write file failed: %s", err.Error())
+				ctx.JSON(http.StatusOK, gin.H{
+					"code": http.StatusInternalServerError,
+					"msg":  "Write file failed!",
+					"data": nil,
+				})
+				return
+			}
+		}
+
+		//output, err := nginxx.Reload()
+		//if err != nil {
+		//	logx.GetLogger().Sugar().Infof("Reload nginx failed: %s", output)
+		//	logx.GetLogger().Sugar().Errorf("Reload nginx failed: %s", err.Error())
+		//	ctx.JSON(http.StatusOK, gin.H{
+		//		"code": http.StatusInternalServerError,
+		//		"msg":  "Reload nginx failed!",
+		//		"data": nil,
+		//	})
+		//	return
+		//}
+
+		newContent, err := os.ReadFile(parentAbsPath)
+		if err != nil {
+			logx.GetLogger().Sugar().Errorf("Read file failed: %s", err.Error())
+			ctx.JSON(http.StatusOK, gin.H{
+				"code": http.StatusInternalServerError,
+				"msg":  "Read file failed!",
+				"data": nil,
+			})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusOK,
+			"msg":  "Get data successfully!",
+			"data": string(newContent),
 		})
 	}
 }
@@ -135,8 +294,28 @@ func Detail(ctx *gin.Context) {
 func ChangeFolder(ctx *gin.Context) {
 	setting := configx.ServerSetting
 	storagePath := setting.System.StoragePath
-	confPath := nginxx.GetConfPath(storagePath)
+	confPath, pathErr := nginxx.GetConfPath(storagePath)
+	if pathErr != nil {
+		logx.GetLogger().Sugar().Errorf("Get nginx conf path failed: %s", pathErr.Error())
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "Get nginx conf path failed!",
+			"data": nil,
+		})
+		return
+	}
 	baseAbsPath, _ := filepath.Abs(confPath)
+
+	isExistPath := filex.FilePathExists(baseAbsPath)
+	if !isExistPath {
+		logx.GetLogger().Sugar().Errorf("File or directory does not exist!: %s", baseAbsPath)
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusInternalServerError,
+			"msg":  "File or directory does not exist!",
+			"data": nil,
+		})
+		return
+	}
 
 	parentPath := ctx.Query("parentPath")
 	logx.GetLogger().Sugar().Infof("parentPath: %s", parentPath)
@@ -148,6 +327,7 @@ func ChangeFolder(ctx *gin.Context) {
 
 		exists := filex.FilePathExists(parentAbsPath)
 		if !exists {
+			logx.GetLogger().Sugar().Errorf("File or directory does not exist!: %s", parentAbsPath)
 			ctx.JSON(http.StatusOK, gin.H{
 				"code": http.StatusInternalServerError,
 				"msg":  "File or directory does not exist!",
@@ -158,6 +338,7 @@ func ChangeFolder(ctx *gin.Context) {
 
 		isDir := filex.IsDir(parentAbsPath)
 		if !isDir {
+			logx.GetLogger().Sugar().Errorf("File or directory does not exist!: %s", parentAbsPath)
 			ctx.JSON(http.StatusOK, gin.H{
 				"code": http.StatusInternalServerError,
 				"msg":  "File or directory does not exist!",
@@ -180,11 +361,16 @@ func ChangeFolder(ctx *gin.Context) {
 func ListFolder(parentAbsPath string) *[]FileList {
 	setting := configx.ServerSetting
 	storagePath := setting.System.StoragePath
-	confPath := nginxx.GetConfPath(storagePath)
+	confPath, pathErr := nginxx.GetConfPath(storagePath)
+	if pathErr != nil {
+		logx.GetLogger().Sugar().Errorf("Get nginx conf path failed: %s", pathErr.Error())
+		return nil
+	}
 	basePath, _ := filepath.Abs(confPath)
 
 	exists := filex.FilePathExists(parentAbsPath)
 	if !exists {
+		logx.GetLogger().Sugar().Errorf("File or directory does not exist!: %s", parentAbsPath)
 		return nil
 	}
 

@@ -9,9 +9,21 @@
             @click="handleSave"
           >
             <el-icon>
-              <ele-CirclePlus/>
+              <ele-Edit/>
             </el-icon>
             保存
+          </el-button>
+        </el-col>
+        <el-col :span="1.5">
+          <el-button
+            type="warning"
+            size="small"
+            @click="handleCancel"
+          >
+            <el-icon>
+              <ele-Back/>
+            </el-icon>
+            取消
           </el-button>
         </el-col>
       </el-row>
@@ -32,19 +44,16 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, reactive, ref, toRefs, watch } from 'vue';
+import { defineComponent, onMounted, reactive, ref, toRefs } from 'vue';
 import MonacoEditor from '/@/components/MonacoEditor/index.vue'
-import { useRoute } from "vue-router";
-import { getDetail } from "/@/api/config";
+import { useRoute, useRouter } from "vue-router";
+import { getDetail, update } from "/@/api/config";
+import { ElNotification } from "element-plus";
 
 interface FormDataState {
   loading: {
     fileEditor: boolean,
   },
-  // 是否显示弹出层
-  isShowDialog: boolean;
-  // 弹出层标题
-  title: string,
   codes: string,
   opts: object,
 }
@@ -57,6 +66,7 @@ export default defineComponent({
   setup(props, context) {
 
     const route = useRoute();
+    const router = useRouter();
 
     const ruleFormRef = ref();
 
@@ -64,8 +74,6 @@ export default defineComponent({
       loading: {
         fileEditor: false,
       },
-      isShowDialog: false,
-      title: '',
       codes: "",
       opts: {
         sty: { width: "100%", height: 300 },
@@ -79,18 +87,12 @@ export default defineComponent({
       handleDetail();
     });
 
-    watch(() => route.query.fileName, () => {
-      console.log(route.query.fileName)
-    }, {
-      immediate: true,
-      deep: true
-    });
-
     const codeChange = (code: string) => {
       state.codes = code;
     };
 
     const handleDetail = () => {
+      state.loading.fileEditor = true;
       const params = {
         parentPath: route.query.fileName
       }
@@ -99,18 +101,70 @@ export default defineComponent({
         if (res.code === 200) {
           state.codes = res.data;
         }
+        state.loading.fileEditor = false;
+      }).catch((res) => {
+        console.log(res)
+        ElNotification({
+          type: 'error',
+          showClose: true,
+          duration: 3000,
+          title: "详情",
+          message: "获取详情失败"
+        });
+        state.loading.fileEditor = false;
       });
     }
 
     const handleSave = () => {
+      state.loading.fileEditor = true
+      const params = {
+        parentPath: route.query.fileName,
+        content: state.codes
+      }
+      update(params).then((res: any) => {
+        console.log("update: ", res)
+        if (res.code === 200) {
+          state.codes = res.data;
+          ElNotification({
+            type: 'success',
+            showClose: true,
+            duration: 3000,
+            title: "更新",
+            message: "更新成功"
+          });
+        } else {
+          ElNotification({
+            type: 'error',
+            showClose: true,
+            duration: 3000,
+            title: "更新",
+            message: "更新失败"
+          });
+        }
+        state.loading.fileEditor = false
+      }).catch((res) => {
+        console.log(res)
+        ElNotification({
+          type: 'error',
+          showClose: true,
+          duration: 3000,
+          title: "更新",
+          message: "更新失败"
+        });
+        state.loading.fileEditor = false;
+      });
+    };
 
-    }
+    const handleCancel = () => {
+      router.go(-1);
+    };
 
     return {
       ...toRefs(state),
       ruleFormRef,
       codeChange,
       handleSave,
+      handleCancel,
     };
   },
 });

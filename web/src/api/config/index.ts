@@ -17,5 +17,5 @@ export function getDetail(params: object) {
 
 // 修改
 export function update(data: object) {
-  return putRequest('/sys/config/update', data);
+  return putRequest(`/sys/config/update`, data);
 }
