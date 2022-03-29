@@ -236,7 +236,7 @@ export default defineComponent({
     const handleUpdate = (row: TableDataRow) => {
       const fileName = state.tableData.fileNames.length !== 0 ? state.tableData.fileNames : row.fileName;
       router.push({
-        name: "configFileEditor",
+        name: "fileEditor",
         query: {
           fileName: fileName
         }
