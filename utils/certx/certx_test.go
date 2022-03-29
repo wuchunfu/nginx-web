@@ -24,7 +24,7 @@ func TestLego(t *testing.T) {
 	}
 
 	myUser := MyUser{
-		Email: "test@test.com",
+		Email: "you@yours.com",
 		key:   privateKey,
 	}
 
@@ -40,10 +40,18 @@ func TestLego(t *testing.T) {
 		log.Fatal(err)
 	}
 
+	// We specify an HTTP port of 5002 and an TLS port of 5001 on all interfaces
+	// because we aren't running as root and can't bind a listener to port 80 and 443
+	// (used later when we attempt to pass challenges). Keep in mind that you still
+	// need to proxy challenge traffic to port 9180 and 9181.
 	err = client.Challenge.SetHTTP01Provider(http01.NewProviderServer("", "9180"))
 	if err != nil {
 		log.Fatal(err)
 	}
+	//err = client.Challenge.SetTLSALPN01Provider(tlsalpn01.NewProviderServer("", "9181"))
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
 	// New users will need to register
 	reg, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
@@ -54,7 +62,7 @@ func TestLego(t *testing.T) {
 	myUser.Registration = reg
 
 	request := certificate.ObtainRequest{
-		Domains: []string{"test.test.com"},
+		Domains: []string{"mydomain.com"},
 		Bundle:  true,
 	}
 
@@ -66,11 +74,13 @@ func TestLego(t *testing.T) {
 	// Each certificate comes back with the cert bytes, the bytes of the client's
 	// private key, and a certificate URL. SAVE THESE TO DISK.
 	fmt.Printf("%#v\n", certificates)
-	err = os.WriteFile("fullchain.cer", certificates.Certificate, 0644)
+
+	err = os.WriteFile("fullchain.cer", certificates.Certificate, 0744)
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = os.WriteFile("private.key", certificates.PrivateKey, 0644)
+
+	err = os.WriteFile("private.key", certificates.PrivateKey, 0744)
 	if err != nil {
 		log.Fatal(err)
 	}

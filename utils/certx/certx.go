@@ -69,15 +69,16 @@ func IssueCert(domain string) error {
 	}
 
 	myUser := MyUser{
-		Email: "319355703@qq.com",
+		Email: "you@yours.com",
 		key:   privateKey,
 	}
 
 	config := lego.NewConfig(&myUser)
+
 	if false {
+		// This CA URL is configured for a local dev instance of Boulder running in Dockerfile in a VM.
 		config.CADirURL = "https://acme-staging-v02.api.letsencrypt.org/directory"
 	}
-
 	config.Certificate.KeyType = certcrypto.RSA2048
 
 	// A client facilitates communication with the CA server.
@@ -87,13 +88,19 @@ func IssueCert(domain string) error {
 		return err
 	}
 
-	err = client.Challenge.SetHTTP01Provider(
-		http01.NewProviderServer("", "9180"),
-	)
+	// We specify an HTTP port of 5002 and an TLS port of 5001 on all interfaces
+	// because we aren't running as root and can't bind a listener to port 80 and 443
+	// (used later when we attempt to pass challenges). Keep in mind that you still
+	// need to proxy challenge traffic to port 5002 and 5001.
+	err = client.Challenge.SetHTTP01Provider(http01.NewProviderServer("", "9180"))
 	if err != nil {
 		log.Println(err)
 		return err
 	}
+	//err = client.Challenge.SetTLSALPN01Provider(tlsalpn01.NewProviderServer("", "9181"))
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
 	// New users will need to register
 	reg, err := client.Registration.Register(registration.RegisterOptions{TermsOfServiceAgreed: true})
@@ -131,15 +138,13 @@ func IssueCert(domain string) error {
 
 	// Each certificate comes back with the cert bytes, the bytes of the client's
 	// private key, and a certificate URL. SAVE THESE TO DISK.
-	err = os.WriteFile(filepath.Join(saveDir, "fullchain.cer"),
-		certificates.Certificate, 0644)
+	err = os.WriteFile(filepath.Join(saveDir, "fullchain.cer"), certificates.Certificate, 0744)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join(saveDir, domain+".key"),
-		certificates.PrivateKey, 0644)
+	err = os.WriteFile(filepath.Join(saveDir, domain+".key"), certificates.PrivateKey, 0744)
 	if err != nil {
 		log.Println(err)
 		return err
