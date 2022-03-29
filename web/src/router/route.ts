@@ -96,10 +96,10 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
         children: [
           {
             path: '/config/file',
-            name: 'configFile',
+            name: 'configManage',
             component: () => import('/@/views/config/file/index.vue'),
             meta: {
-              title: 'message.router.configFile',
+              title: 'message.router.configManage',
               isLink: '',
               isHide: false,
               isKeepAlive: true,
@@ -111,12 +111,27 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
           },
           {
             path: '/config/fileEditor',
-            name: 'configFileEditor',
+            name: 'fileEditor',
             component: () => import('/@/views/config/file/component/FileEditor.vue'),
             meta: {
-              title: 'message.router.configFileEditor',
+              title: 'message.router.fileEditor',
               isLink: '',
               isHide: true,
+              isKeepAlive: true,
+              isAffix: false,
+              isIframe: false,
+              roles: ['admin'],
+              icon: 'iconfont icon-icon-',
+            },
+          },
+          {
+            path: '/config/website',
+            name: 'websiteManage',
+            component: () => import('/@/views/config/website/index.vue'),
+            meta: {
+              title: 'message.router.websiteManage',
+              isLink: '',
+              isHide: false,
               isKeepAlive: true,
               isAffix: false,
               isIframe: false,

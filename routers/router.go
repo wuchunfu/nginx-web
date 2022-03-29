@@ -7,6 +7,7 @@ import (
 	"github.com/wuchunfu/nginx-web/api/loginApi"
 	"github.com/wuchunfu/nginx-web/api/loginLogApi"
 	"github.com/wuchunfu/nginx-web/api/userApi"
+	"github.com/wuchunfu/nginx-web/api/websiteApi"
 	"github.com/wuchunfu/nginx-web/middleware/cors"
 	"github.com/wuchunfu/nginx-web/middleware/logx"
 )
@@ -52,6 +53,11 @@ func InitRouter() *gin.Engine {
 		configGroup.GET("/detail", configApi.Detail)
 		configGroup.PUT("/update", configApi.Update)
 		configGroup.GET("/changeFolder", configApi.ChangeFolder)
+	}
+
+	websiteGroup := router.Group("/sys/website")
+	{
+		websiteGroup.GET("/list", websiteApi.List)
 	}
 
 	router.NoRoute(api.NoRouteHandler)

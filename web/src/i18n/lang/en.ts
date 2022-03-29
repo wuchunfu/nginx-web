@@ -74,8 +74,9 @@ export default {
     layoutLinkView: 'LinkView',
     layoutIfameView: 'IfameView',
     config: 'config',
-    configFile: 'Config file',
-    configFileEditor: 'File Editor',
+    configManage: 'Config Manage',
+    fileEditor: 'File Editor',
+    websiteManage: 'Website Manage',
   },
   staticRoutes: {
     signIn: 'signIn',

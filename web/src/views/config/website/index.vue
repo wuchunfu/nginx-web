@@ -4,32 +4,6 @@
       <el-row :gutter="10" class="mb8">
         <el-col :span="1.5">
           <el-button
-            type="primary"
-            size="small"
-            :disabled="tableData.folderDisabled"
-            @click="handleChangeFolder('all')"
-          >
-            <el-icon color="#FFFFFF" size="20">
-              <ele-HomeFilled/>
-            </el-icon>
-            主页
-          </el-button>
-        </el-col>
-        <el-col :span="1.5">
-          <el-button
-            type="warning"
-            size="small"
-            :disabled="tableData.folderDisabled"
-            @click="handleChangeFolder('previous')"
-          >
-            <el-icon color="#FFFFFF" size="20">
-              <ele-Back/>
-            </el-icon>
-            上一级
-          </el-button>
-        </el-col>
-        <el-col :span="1.5">
-          <el-button
             type="success"
             size="small"
             :disabled="tableData.single"
@@ -56,7 +30,6 @@
           tooltip-effect="dark"
           highlight-current-row
           element-loading-text="Loading"
-          @cell-click="handleListFolder"
           @selection-change="handleSelectionChange"
           style="width: 100%"
         >
@@ -81,18 +54,26 @@
             show-overflow-tooltip
           >
             <template #default="scope">
-              <div v-if="scope.row.isFile">
-                <el-icon color="#409EFF" size="20">
-                  <ele-Document/>
-                </el-icon>
-                <span style="margin-left: 5px">{{ scope.row.fileName }}</span>
-              </div>
-              <div v-else>
-                <el-icon color="#409EFF" size="20">
-                  <ele-Folder/>
-                </el-icon>
-                <span style="margin-left: 5px;">{{ scope.row.fileName }}</span>
-              </div>
+              <el-icon color="#409EFF" size="20">
+                <ele-Document/>
+              </el-icon>
+              <span style="margin-left: 5px">{{ scope.row.fileName }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="isEnabled"
+            label="是否启用"
+            align="center"
+          >
+            <template v-slot="scope">
+              <span>
+                <el-tag
+                  :type="scope.row.isEnabled === 1 ? 'success' : 'danger'"
+                  effect="plain"
+                >
+                  {{ statusConvert(scope.row.isEnabled) }}
+                </el-tag>
+              </span>
             </template>
           </el-table-column>
           <el-table-column
@@ -137,21 +118,16 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, reactive, ref, toRefs } from 'vue';
-import { ElMessage, ElNotification } from 'element-plus';
-import { getList, getListFolder } from "/@/api/config";
+import { ElNotification } from 'element-plus';
+import { getList } from "/@/api/website";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 
 // 定义接口来定义对象的类型
 interface TableDataRow {
-  basePath: string;
-  parentPath: string;
-  filePath: string;
   fileName: string;
-  isFile: boolean;
-  fileType: string;
+  isEnabled: boolean;
   fileSize: string;
-  suffixName: string;
   dateTime: string;
 }
 
@@ -203,6 +179,17 @@ export default defineComponent({
       getDataList();
     });
 
+    const statusConvert = (state: boolean) => {
+      switch (state) {
+        case true:
+          return "启用";
+        case false:
+          return "禁用";
+        default:
+          return "禁用";
+      }
+    };
+
     // 表格数据
     const getDataList = () => {
       state.tableData.tableLoading = true;
@@ -238,45 +225,6 @@ export default defineComponent({
       });
     };
 
-    const handleListFolder = (row: any, column: any, cell: any, event: any) => {
-      if (!row.isFile) {
-        if (row.filePath === "") {
-          state.tableData.fileParentPath = row.fileName;
-        } else {
-          state.tableData.fileParentPath = row.filePath;
-        }
-        state.tableData.folderDisabled = false;
-        getDataList();
-      }
-    };
-
-    const handleChangeFolder = (flag: string) => {
-      if ("all" === flag) {
-        state.tableData.fileParentPath = "";
-        state.tableData.folderDisabled = true;
-        getDataList();
-      } else if ("previous" === flag) {
-        const params = {
-          parentPath: state.tableData.fileParentPath
-        }
-        getListFolder(params).then((res: any) => {
-          console.log("getListFolder: ", res);
-          let data = res.data[0];
-          if (data.parentPath === "") {
-            state.tableData.folderDisabled = true
-          }
-          state.tableData.fileParentPath = data.parentPath
-          state.tableData.tableList = res.data;
-        }).catch((res: any) => {
-          console.log(res);
-          ElMessage({
-            type: 'error',
-            message: '文件夹切换失败',
-          });
-        });
-      }
-    };
-
     // 多选框选中数据
     const handleSelectionChange = (selection: any) => {
       state.tableData.fileNames = selection.map((item: any) => item.fileName)
@@ -286,19 +234,9 @@ export default defineComponent({
 
     // 打开修改用户弹窗
     const handleUpdate = (row: TableDataRow) => {
-      let fileName = "";
-      if (state.tableData.fileNames.length !== 0) {
-        fileName = state.tableData.fileNames;
-      } else {
-        if (row.filePath === "") {
-          fileName = row.fileName;
-        } else {
-          fileName = row.filePath;
-        }
-      }
-
+      const fileName = state.tableData.fileNames.length !== 0 ? state.tableData.fileNames : row.fileName;
       router.push({
-        name: "fileEditor",
+        name: "configFileEditor",
         query: {
           fileName: fileName
         }
@@ -310,9 +248,8 @@ export default defineComponent({
       queryFormRef,
       handleSelectionChange,
       handleUpdate,
+      statusConvert,
       getDataList,
-      handleListFolder,
-      handleChangeFolder,
     };
   },
 });

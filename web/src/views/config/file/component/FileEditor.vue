@@ -1,32 +1,34 @@
 <template>
   <div class="system-add-user-container">
     <el-card shadow="hover">
-      <el-row :gutter="10" class="mb8">
-        <el-col :span="1.5">
-          <el-button
-            type="success"
-            size="small"
-            @click="handleSave"
-          >
-            <el-icon>
-              <ele-Edit/>
-            </el-icon>
-            保存
-          </el-button>
-        </el-col>
-        <el-col :span="1.5">
-          <el-button
-            type="warning"
-            size="small"
-            @click="handleCancel"
-          >
-            <el-icon>
-              <ele-Back/>
-            </el-icon>
-            取消
-          </el-button>
-        </el-col>
-      </el-row>
+      <el-affix :offset="50">
+        <el-row :gutter="10" class="mb8">
+          <el-col :span="1.5">
+            <el-button
+              type="success"
+              size="small"
+              @click="handleSave"
+            >
+              <el-icon>
+                <ele-Edit/>
+              </el-icon>
+              保存
+            </el-button>
+          </el-col>
+          <el-col :span="1.5">
+            <el-button
+              type="warning"
+              size="small"
+              @click="handleCancel"
+            >
+              <el-icon>
+                <ele-Back/>
+              </el-icon>
+              取消
+            </el-button>
+          </el-col>
+        </el-row>
+      </el-affix>
 
       <el-skeleton
         :loading="loading.fileEditor"

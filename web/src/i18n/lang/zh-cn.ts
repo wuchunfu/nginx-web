@@ -74,8 +74,9 @@ export default {
     layoutLinkView: '外链',
     layoutIfameView: '内嵌 iframe',
     config: '配置',
-    configFile: '配置文件',
-    configFileEditor: '文件编辑',
+    configManage: '配置管理',
+    fileEditor: '文件编辑',
+    websiteManage: '站点管理',
   },
   staticRoutes: {
     signIn: '登录',
