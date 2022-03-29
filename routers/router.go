@@ -6,6 +6,7 @@ import (
 	"github.com/wuchunfu/nginx-web/api/configApi"
 	"github.com/wuchunfu/nginx-web/api/loginApi"
 	"github.com/wuchunfu/nginx-web/api/loginLogApi"
+	"github.com/wuchunfu/nginx-web/api/templateApi"
 	"github.com/wuchunfu/nginx-web/api/userApi"
 	"github.com/wuchunfu/nginx-web/api/websiteApi"
 	"github.com/wuchunfu/nginx-web/middleware/cors"
@@ -58,6 +59,7 @@ func InitRouter() *gin.Engine {
 	websiteGroup := router.Group("/sys/website")
 	{
 		websiteGroup.GET("/list", websiteApi.List)
+		websiteGroup.GET("/template/:fileName", templateApi.GetTemplate)
 	}
 
 	router.NoRoute(api.NoRouteHandler)
