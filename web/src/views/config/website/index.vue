@@ -4,8 +4,22 @@
       <el-row :gutter="10" class="mb8">
         <el-col :span="1.5">
           <el-button
+            type="primary"
+            size="default"
+            plain
+            @click="handleAdd"
+          >
+            <el-icon>
+              <ele-FolderAdd/>
+            </el-icon>
+            新增
+          </el-button>
+        </el-col>
+        <el-col :span="1.5">
+          <el-button
             type="success"
-            size="small"
+            size="default"
+            plain
             :disabled="tableData.single"
             @click="handleUpdate"
           >
@@ -113,6 +127,8 @@
         </el-table>
       </el-skeleton>
     </el-card>
+
+    <AddOrUpdate ref="addOrUpdateUserRef" @onRefreshDataList="getDataList"/>
   </div>
 </template>
 
@@ -121,7 +137,7 @@ import { defineComponent, onMounted, reactive, ref, toRefs } from 'vue';
 import { ElNotification } from 'element-plus';
 import { getList } from "/@/api/website";
 import { useI18n } from "vue-i18n";
-import { useRouter } from "vue-router";
+import AddOrUpdate from '/@/views/config/website/component/AddOrUpdate.vue';
 
 // 定义接口来定义对象的类型
 interface TableDataRow {
@@ -153,11 +169,12 @@ interface TableDataState {
 }
 
 export default defineComponent({
-  name: 'userList',
+  name: 'websiteList',
+  components: { AddOrUpdate },
   setup() {
     const { t } = useI18n();
-    const router = useRouter();
 
+    const addOrUpdateUserRef = ref();
     const queryFormRef = ref();
 
     const state = reactive<TableDataState>({
@@ -232,21 +249,23 @@ export default defineComponent({
       state.tableData.multiple = !selection.length
     };
 
+    // 打开新增用户弹窗
+    const handleAdd = () => {
+      addOrUpdateUserRef.value.openAddDialog();
+    };
+
     // 打开修改用户弹窗
     const handleUpdate = (row: TableDataRow) => {
-      const fileName = state.tableData.fileNames.length !== 0 ? state.tableData.fileNames : row.fileName;
-      router.push({
-        name: "fileEditor",
-        query: {
-          fileName: fileName
-        }
-      })
+      const rowId = state.tableData.fileNames.length !== 0 ? state.tableData.fileNames : row.fileName;
+      addOrUpdateUserRef.value.openUpdateDialog(rowId);
     };
 
     return {
       ...toRefs(state),
+      addOrUpdateUserRef,
       queryFormRef,
       handleSelectionChange,
+      handleAdd,
       handleUpdate,
       statusConvert,
       getDataList,

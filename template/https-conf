@@ -1,28 +1,30 @@
 server {
-    listen {{ http_listen_port }};
-    listen [::]:{{ http_listen_port }};
+    listen {{ httpPort }};
+    listen [::]:{{ httpPort }};
 
-    server_name {{ server_name }};
+    server_name {{ serverName }};
 
     rewrite ^(.*)$  https://$host$1 permanent;
 }
 
 server {
-    listen {{ https_listen_port }} ssl http2;
-    listen [::]:{{ https_listen_port }} ssl http2;
+    listen {{ httpsPort }} ssl http2;
+    listen [::]:{{ httpsPort }} ssl http2;
 
-    server_name {{ server_name }};
+    server_name {{ serverName }};
 
-    root ;
+    root {{ rootDirectory }};
 
-    index ;
+    index {{ homePage }};
 
-    ssl_certificate {{ ssl_certificate }};
-    ssl_certificate_key {{ ssl_certificate_key }};
+    ssl_certificate {{ sslCertificate }};
+    ssl_certificate_key {{ sslCertificateKey }};
+
+    ssl_session_cache    shared:SSL:1m;
     ssl_session_timeout 5m;
     ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
     ssl_prefer_server_ciphers on;
-    ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;
+    ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4:HIGH:!aNULL:!MD5;
 
     location ^~ /.well-known/acme-challenge/ {
         proxy_http_version  1.1;

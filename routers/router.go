@@ -59,6 +59,9 @@ func InitRouter() *gin.Engine {
 	websiteGroup := router.Group("/sys/website")
 	{
 		websiteGroup.GET("/list", websiteApi.List)
+		websiteGroup.GET("/detail/:fileName", websiteApi.Detail)
+		websiteGroup.POST("/save", websiteApi.Save)
+		websiteGroup.PUT("/update", websiteApi.Update)
 		websiteGroup.GET("/template/:fileName", templateApi.GetTemplate)
 	}
 

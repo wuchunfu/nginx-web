@@ -1,12 +1,12 @@
 server {
-    listen {{ http_listen_port }};
-    listen [::]:{{ http_listen_port }};
+    listen {{ httpPort }};
+    listen [::]:{{ httpPort }};
 
-    server_name {{ server_name }};
+    server_name {{ serverName }};
 
-    root ;
+    root {{ rootDirectory }};
 
-    index ;
+    index {{ homePage }};
 
     location ^~ /.well-known/acme-challenge/ {
         proxy_http_version  1.1;

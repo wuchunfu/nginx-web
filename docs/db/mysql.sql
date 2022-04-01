@@ -37,3 +37,23 @@ CREATE TABLE `sys_login_log`
     `create_time` varchar(50)  NOT NULL COMMENT '创建时间',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='登陆日志管理';
+
+-- 网站配置表
+CREATE TABLE `sys_website`
+(
+    `website_id`          int(20) NOT NULL AUTO_INCREMENT,
+    `file_name`           varchar(50) NOT NULL DEFAULT '' COMMENT '配置文件名称',
+    `server_name`         varchar(50) NOT NULL DEFAULT '' COMMENT '网站域名',
+    `root_directory`      varchar(50) NOT NULL DEFAULT '' COMMENT '网站根目录',
+    `home_page`           varchar(50) NOT NULL DEFAULT '' COMMENT '网站主页',
+    `http_port`           int(11) NOT NULL DEFAULT 80 COMMENT 'http 监听端口',
+    `support_ssl`         int(11) NOT NULL DEFAULT '0' COMMENT '启用 TLS 状态 1: 启用 0: 禁用',
+    `https_port`          int(11) NOT NULL DEFAULT 443 COMMENT 'https 监听端口',
+    `ssl_certificate`     varchar(50) NOT NULL DEFAULT '' COMMENT 'TLS 证书路径',
+    `ssl_certificate_key` varchar(50) NOT NULL DEFAULT '' COMMENT '私钥路径',
+    `status`              int(11) NOT NULL DEFAULT '0' COMMENT '启用状态 1: 正常 0:禁用',
+    `create_time`         varchar(50) NOT NULL COMMENT '创建时间',
+    `update_time`         varchar(50)          DEFAULT NULL COMMENT '更新时间',
+    PRIMARY KEY (`website_id`),
+    UNIQUE KEY `UQE_file_name` (`file_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '网站配置表';
