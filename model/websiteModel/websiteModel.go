@@ -7,17 +7,18 @@ import (
 
 // Website 网站 model
 type Website struct {
-	WebsiteId         int64  `json:"websiteId" gorm:"primary_key; auto_increment; not null"`          // 设置字段 websiteId 自增类型。
-	FileName          string `json:"fileName" gorm:"type:varchar(50); not null; default ''; unique"`  // 配置文件名称
-	ServerName        string `json:"serverName" gorm:"type:varchar(50); not null; default ''"`        // 网站域名
-	RootDirectory     string `json:"rootDirectory" gorm:"type:varchar(50); not null; default ''"`     // 网站根目录
-	HomePage          string `json:"homePage" gorm:"type:varchar(50); not null; default ''"`          // 网站主页
-	HttpPort          int16  `json:"httpPort" gorm:"tinyint; not null; default 80"`                   // http 监听端口
-	SupportSsl        int8   `json:"supportSsl" gorm:"tinyint; not null; default 0"`                  // 启用 TLS 状态 1: 启用 0: 禁用
-	HttpsPort         int16  `json:"httpsPort" gorm:"tinyint; not null; default 443"`                 // https 监听端口
-	SslCertificate    string `json:"sslCertificate" gorm:"type:varchar(50); not null; default ''"`    // TLS 证书路径
-	SslCertificateKey string `json:"sslCertificateKey" gorm:"type:varchar(50); not null; default ''"` // 私钥路径
-	Status            int8   `json:"status" gorm:"tinyint; not null; default 0"`                      // 启用状态 1: 正常 0:禁用
+	WebsiteId         int64  `json:"websiteId" gorm:"primary_key; auto_increment; not null"`           // 设置字段 websiteId 自增类型。
+	FileName          string `json:"fileName" gorm:"type:varchar(100); not null; default ''; unique"`  // 配置文件名称
+	ServerName        string `json:"serverName" gorm:"type:varchar(100); not null; default ''"`        // 网站域名
+	RootDirectory     string `json:"rootDirectory" gorm:"type:varchar(200); not null; default ''"`     // 网站根目录
+	HomePage          string `json:"homePage" gorm:"type:varchar(200); not null; default ''"`          // 网站主页
+	HttpPort          int16  `json:"httpPort" gorm:"tinyint; not null; default 80"`                    // http 监听端口
+	SupportSsl        int8   `json:"supportSsl" gorm:"tinyint; not null; default 0"`                   // 启用 TLS 状态 1: 启用 0: 禁用
+	HttpsPort         int16  `json:"httpsPort" gorm:"tinyint; not null; default 443"`                  // https 监听端口
+	SslCertificate    string `json:"sslCertificate" gorm:"type:varchar(200); not null; default ''"`    // TLS 证书路径
+	SslCertificateKey string `json:"sslCertificateKey" gorm:"type:varchar(200); not null; default ''"` // 私钥路径
+	Status            int8   `json:"status" gorm:"tinyint; not null; default 0"`                       // 启用状态 1: 正常 0:禁用
+	Content           string `json:"content" gorm:"varchar(2048); not null; default ''"`               // 配置内容
 	CreateTime        string `json:"createTime" gorm:"type:varchar(50); not null"`
 	UpdateTime        string `json:"updateTime" gorm:"type:varchar(50);"`
 }

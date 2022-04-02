@@ -170,8 +170,8 @@ func Save(ctx *gin.Context) {
 	website.RootDirectory = rootDirectory
 	website.HomePage = homePage
 	website.HttpPort = httpPort
+	website.SupportSsl = supportSsl
 	if supportSsl == 1 {
-		website.SupportSsl = supportSsl
 		website.HttpsPort = httpsPort
 		website.SslCertificate = sslCertificate
 		website.SslCertificateKey = sslCertificateKey
@@ -242,6 +242,8 @@ func Save(ctx *gin.Context) {
 		})
 		return
 	}
+
+	website.Content = string(content)
 
 	website.Save()
 
@@ -372,11 +374,27 @@ func Update(ctx *gin.Context) {
 	websiteMap["home_page"] = homePage
 	websiteMap["http_port"] = httpPort
 	websiteMap["support_ssl"] = supportSsl
-	websiteMap["https_port"] = httpsPort
-	websiteMap["ssl_certificate"] = sslCertificate
-	websiteMap["ssl_certificate_key"] = sslCertificateKey
+	if supportSsl == 1 {
+		websiteMap["https_port"] = httpsPort
+		websiteMap["ssl_certificate"] = sslCertificate
+		websiteMap["ssl_certificate_key"] = sslCertificateKey
+	}
 	websiteMap["status"] = status
 	websiteMap["update_time"] = datetimex.FormatNowDateTime()
+
+	website.FileName = fileName
+	website.ServerName = serverName
+	website.RootDirectory = rootDirectory
+	website.HomePage = homePage
+	website.HttpPort = httpPort
+	website.SupportSsl = supportSsl
+	if supportSsl == 1 {
+		website.HttpsPort = httpsPort
+		website.SslCertificate = sslCertificate
+		website.SslCertificateKey = sslCertificateKey
+	}
+	website.Status = status
+	website.UpdateTime = datetimex.FormatNowDateTime()
 
 	availableConfPath, availablePathErr := nginxx.GetConfPath("sites-available")
 	if availablePathErr != nil {
@@ -445,6 +463,8 @@ func Update(ctx *gin.Context) {
 		})
 		return
 	}
+
+	websiteMap["content"] = string(content)
 
 	website.Update(websiteId, websiteMap)
 

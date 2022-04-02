@@ -118,6 +118,7 @@
               <el-button
                 size="small"
                 type="text"
+                :disabled="scope.row.isEnabled"
                 @click="handleUpdate(scope.row)"
               >
                 修改
@@ -141,7 +142,7 @@
               <el-button
                 size="small"
                 type="text"
-                :disabled="!scope.row.isEnabled"
+                :disabled="scope.row.isEnabled"
                 @click="handleDelete(scope.row)"
               >
                 删除
