@@ -62,6 +62,8 @@ func InitRouter() *gin.Engine {
 		websiteGroup.GET("/detail/:fileName", websiteApi.Detail)
 		websiteGroup.POST("/save", websiteApi.Save)
 		websiteGroup.PUT("/update", websiteApi.Update)
+		websiteGroup.PUT("/enable/:fileName", websiteApi.Enable)
+		websiteGroup.PUT("/disable/:fileName", websiteApi.Disable)
 		websiteGroup.GET("/template/:fileName", templateApi.GetTemplate)
 	}
 

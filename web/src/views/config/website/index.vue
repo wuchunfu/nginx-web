@@ -82,7 +82,7 @@
             <template v-slot="scope">
               <span>
                 <el-tag
-                  :type="scope.row.isEnabled === 1 ? 'success' : 'danger'"
+                  :type="scope.row.isEnabled ? 'success' : 'danger'"
                   effect="plain"
                 >
                   {{ statusConvert(scope.row.isEnabled) }}
@@ -111,7 +111,7 @@
           <el-table-column
             label="操作"
             align="center"
-            width="100"
+            width="150"
             fixed="right"
           >
             <template #default="scope">
@@ -121,6 +121,22 @@
                 @click="handleUpdate(scope.row)"
               >
                 修改
+              </el-button>
+              <el-button
+                size="small"
+                type="text"
+                v-if="!scope.row.isEnabled"
+                @click="handleEnable(scope.row)"
+              >
+                启用
+              </el-button>
+              <el-button
+                size="small"
+                type="text"
+                v-if="scope.row.isEnabled"
+                @click="handleDisable(scope.row)"
+              >
+                禁用
               </el-button>
             </template>
           </el-table-column>
@@ -135,7 +151,7 @@
 <script lang="ts">
 import { defineComponent, onMounted, reactive, ref, toRefs } from 'vue';
 import { ElNotification } from 'element-plus';
-import { getList } from "/@/api/website";
+import { disable, enable, getList } from "/@/api/website";
 import { useI18n } from "vue-i18n";
 import AddOrUpdate from '/@/views/config/website/component/AddOrUpdate.vue';
 
@@ -256,9 +272,61 @@ export default defineComponent({
 
     // 打开修改用户弹窗
     const handleUpdate = (row: TableDataRow) => {
-      const rowId = state.tableData.fileNames.length !== 0 ? state.tableData.fileNames : row.fileName;
-      addOrUpdateUserRef.value.openUpdateDialog(rowId);
+      const fileName = state.tableData.fileNames.length !== 0 ? state.tableData.fileNames : row.fileName;
+      addOrUpdateUserRef.value.openUpdateDialog(fileName);
     };
+
+    const handleEnable = (row: TableDataRow) => {
+      const fileName = row.fileName;
+      enable(fileName).then((res: any) => {
+        console.log("enable: ", res)
+        if (res.code === 200) {
+          getDataList();
+          ElNotification({
+            type: 'success',
+            showClose: true,
+            duration: 3000,
+            title: "启用",
+            message: "启用成功"
+          });
+        }
+      }).catch((res) => {
+        console.log(res)
+        ElNotification({
+          type: 'error',
+          showClose: true,
+          duration: 3000,
+          title: "启用",
+          message: "启用失败"
+        });
+      });
+    }
+
+    const handleDisable = (row: TableDataRow) => {
+      const fileName = row.fileName;
+      disable(fileName).then((res: any) => {
+        console.log("disable: ", res)
+        if (res.code === 200) {
+          getDataList();
+          ElNotification({
+            type: 'success',
+            showClose: true,
+            duration: 3000,
+            title: "禁用",
+            message: "禁用成功"
+          });
+        }
+      }).catch((res) => {
+        console.log(res)
+        ElNotification({
+          type: 'error',
+          showClose: true,
+          duration: 3000,
+          title: "禁用",
+          message: "禁用失败"
+        });
+      });
+    }
 
     return {
       ...toRefs(state),
@@ -267,6 +335,8 @@ export default defineComponent({
       handleSelectionChange,
       handleAdd,
       handleUpdate,
+      handleEnable,
+      handleDisable,
       statusConvert,
       getDataList,
     };

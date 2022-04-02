@@ -1,4 +1,4 @@
-import { getRequest, getRequestById, postRequest, putRequest } from "/@/utils/requestApi";
+import { getRequest, getRequestById, postRequest, putRequest, putRequestById } from "/@/utils/requestApi";
 
 // 查询列表
 export function getList(params: object) {
@@ -18,4 +18,14 @@ export function save(data: object) {
 // 修改
 export function update(data: object) {
   return putRequest('/sys/website/update', data);
+}
+
+// 启用
+export function enable(fileName: string) {
+  return putRequestById(`/sys/website/enable/${ fileName }`);
+}
+
+// 禁用
+export function disable(fileName: string) {
+  return putRequestById(`/sys/website/disable/${ fileName }`);
 }

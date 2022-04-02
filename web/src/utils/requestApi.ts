@@ -38,6 +38,13 @@ export const putRequest = (url: string, data: object) => {
   })
 }
 
+export const putRequestById = (url: string) => {
+  return request({
+    method: 'put',
+    url: url,
+  })
+}
+
 export const deleteRequestById = (url: string) => {
   return request({
     method: 'delete',
