@@ -54,6 +54,17 @@ func (website *Website) Update(websiteId int64, fieldMap map[string]interface{})
 	db.Commit()
 }
 
+// Delete 删除
+func (website *Website) Delete(websiteId int64) {
+	db := databasex.GetDB().Begin()
+	err := db.Model(&website).Where("website_id = ?", websiteId).Delete(&website)
+	if err.Error != nil {
+		db.Rollback()
+		logx.GetLogger().Sugar().Error(err.Error)
+	}
+	db.Commit()
+}
+
 // IsExistsFileName 用户名是否存在
 func (website *Website) IsExistsFileName(fileName string) int64 {
 	db := databasex.GetDB()

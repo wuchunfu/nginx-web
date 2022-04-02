@@ -192,7 +192,7 @@
           >
             <template #default="scope">
               <el-button
-                :disabled="scope.row.usernames === 'admin'"
+                :disabled="scope.row.username === 'admin'"
                 size="small"
                 type="text"
                 @click="handleUpdate(scope.row)"
@@ -200,7 +200,7 @@
                 修改
               </el-button>
               <el-button
-                :disabled="scope.row.usernames === 'admin'"
+                :disabled="scope.row.username === 'admin'"
                 size="small"
                 type="text"
                 @click="handleDelete(scope.row)"

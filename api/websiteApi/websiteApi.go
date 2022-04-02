@@ -704,3 +704,121 @@ func Disable(ctx *gin.Context) {
 		"data": nil,
 	})
 }
+
+func Delete(ctx *gin.Context) {
+	fileName := ctx.Param("fileName")
+
+	website := new(websiteModel.Website)
+	detail := website.Detail(fileName)
+	if detail.WebsiteId <= 0 {
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusBadRequest,
+			"data": &detail,
+			"msg":  "获取数据失败！",
+		})
+		return
+	}
+
+	availableConfPath, availablePathErr := nginxx.GetConfPath("sites-available")
+	if availablePathErr != nil {
+		logx.GetLogger().Sugar().Errorf("Get nginx conf path failed: %s", availablePathErr.Error())
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  "Get nginx conf path failed!",
+			"data": nil,
+		})
+		return
+	}
+	availableBaseAbsPath, _ := filepath.Abs(availableConfPath)
+
+	availableIsExistPath := filex.FilePathExists(availableBaseAbsPath)
+	if !availableIsExistPath {
+		logx.GetLogger().Sugar().Errorf("File or directory does not exist!: %s", availableBaseAbsPath)
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  "File or directory does not exist!",
+			"data": nil,
+		})
+		return
+	}
+
+	availableFileAbsPath := filepath.Join(availableBaseAbsPath, fileName)
+	availableFileIsExists := filex.FilePathExists(availableFileAbsPath)
+	if !availableFileIsExists {
+		logx.GetLogger().Sugar().Errorf("File does not exist!: %s", availableFileAbsPath)
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  "File does not exist!",
+			"data": nil,
+		})
+		return
+	}
+
+	enabledConfPath, enabledPathErr := nginxx.GetConfPath("sites-enabled")
+	if enabledPathErr != nil {
+		logx.GetLogger().Sugar().Errorf("Get nginx conf path failed: %s", enabledPathErr.Error())
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  "Get nginx conf path failed!",
+			"data": nil,
+		})
+		return
+	}
+	enabledBaseAbsPath, _ := filepath.Abs(enabledConfPath)
+
+	enabledIsExistPath := filex.FilePathExists(enabledBaseAbsPath)
+	if !enabledIsExistPath {
+		logx.GetLogger().Sugar().Errorf("File or directory does not exist!: %s", enabledBaseAbsPath)
+		ok := filex.MkdirAll(enabledBaseAbsPath)
+		if !ok {
+			logx.GetLogger().Sugar().Errorf("Directory create failed!: %s", enabledBaseAbsPath)
+			return
+		}
+	}
+
+	enabledFileAbsPath := filepath.Join(enabledBaseAbsPath, fileName)
+	enabledFileIsExists := filex.FilePathExists(enabledFileAbsPath)
+	if enabledFileIsExists {
+		logx.GetLogger().Sugar().Infof("File already exists!: %s", enabledFileAbsPath)
+		logx.GetLogger().Sugar().Info("Service is enabled!")
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  "Service is enabled!",
+			"data": nil,
+		})
+		return
+	}
+
+	linkErr := os.Remove(availableFileAbsPath)
+	if linkErr != nil {
+		logx.GetLogger().Sugar().Errorf("Delete failed: %s", linkErr.Error())
+		ctx.JSON(http.StatusOK, gin.H{
+			"code": http.StatusBadRequest,
+			"msg":  "Delete failed!",
+			"data": nil,
+		})
+		return
+	}
+
+	//output, err := nginxx.Reload()
+	//if err != nil {
+	//	logx.GetLogger().Sugar().Errorf("Reload failed: %s", output)
+	//	logx.GetLogger().Sugar().Errorf("Reload failed: %s", err.Error())
+	//	ctx.JSON(http.StatusOK, gin.H{
+	//		"code": http.StatusInternalServerError,
+	//		"msg":  "Reload failed!",
+	//		"data": nil,
+	//	})
+	//	return
+	//}
+
+	websiteId := detail.WebsiteId
+
+	website.Delete(websiteId)
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": http.StatusOK,
+		"msg":  "Website delete successfully!",
+		"data": nil,
+	})
+}

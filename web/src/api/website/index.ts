@@ -1,4 +1,11 @@
-import { getRequest, getRequestById, postRequest, putRequest, putRequestById } from "/@/utils/requestApi";
+import {
+  deleteRequestById,
+  getRequest,
+  getRequestById,
+  postRequest,
+  putRequest,
+  putRequestById
+} from "/@/utils/requestApi";
 
 // 查询列表
 export function getList(params: object) {
@@ -28,4 +35,9 @@ export function enable(fileName: string) {
 // 禁用
 export function disable(fileName: string) {
   return putRequestById(`/sys/website/disable/${ fileName }`);
+}
+
+// 删除
+export function deleteById(fileName: string) {
+  return deleteRequestById(`/sys/website/delete/${ fileName }`);
 }

@@ -63,7 +63,7 @@
           <el-table-column
             prop="fileName"
             label="名称"
-            align="left"
+            align="center"
             fixed
             show-overflow-tooltip
           >
@@ -111,7 +111,7 @@
           <el-table-column
             label="操作"
             align="center"
-            width="150"
+            width="135"
             fixed="right"
           >
             <template #default="scope">
@@ -138,6 +138,14 @@
               >
                 禁用
               </el-button>
+              <el-button
+                size="small"
+                type="text"
+                :disabled="!scope.row.isEnabled"
+                @click="handleDelete(scope.row)"
+              >
+                删除
+              </el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -150,8 +158,8 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, reactive, ref, toRefs } from 'vue';
-import { ElNotification } from 'element-plus';
-import { disable, enable, getList } from "/@/api/website";
+import { ElMessageBox, ElNotification } from 'element-plus';
+import { deleteById, disable, enable, getList } from "/@/api/website";
 import { useI18n } from "vue-i18n";
 import AddOrUpdate from '/@/views/config/website/component/AddOrUpdate.vue';
 
@@ -328,6 +336,38 @@ export default defineComponent({
       });
     }
 
+    // 删除按钮操作
+    const handleDelete = (row: TableDataRow) => {
+      const fileName = row.fileName;
+      ElMessageBox.confirm(`是否确认删除数据项?`, '提示', {
+        type: "warning",
+        confirmButtonText: "确定",
+        cancelButtonText: "取消"
+      }).then(() => {
+        deleteById(fileName).then((res: any) => {
+          console.log("delete: ", res)
+          if (res.code === 200) {
+            getDataList();
+            ElNotification({
+              type: 'success',
+              showClose: true,
+              duration: 3000,
+              title: "删除",
+              message: "删除成功"
+            });
+          } else {
+            ElNotification({
+              type: 'error',
+              showClose: true,
+              duration: 3000,
+              title: "删除",
+              message: "删除失败"
+            });
+          }
+        });
+      })
+    };
+
     return {
       ...toRefs(state),
       addOrUpdateUserRef,
@@ -337,6 +377,7 @@ export default defineComponent({
       handleUpdate,
       handleEnable,
       handleDisable,
+      handleDelete,
       statusConvert,
       getDataList,
     };
